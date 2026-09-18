@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>CodexAccountSwitcher</AssemblyName>
+    <RootNamespace>CodexAccountSwitcher</RootNamespace>
+    <Version>1.1.2-beta.20</Version>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="CodexAccountSwitcher.Tests" />
+  </ItemGroup>
+</Project>

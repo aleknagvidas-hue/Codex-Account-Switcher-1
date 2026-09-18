@@ -1,0 +1,39 @@
+# Build outputs
+**/bin/
+**/obj/
+artifacts/
+dist/
+dist-rc/
+
+# Local verification and packaging
+.smoke-*/
+external-share/
+NuGet.Local.Config
+SWITCH-FIX-STATUS.md
+
+# Runtime data and credentials
+profiles/
+temp/
+profiles.json
+*.auth.dpapi
+auth.json
+auth.json.*
+*.log
+
+# IDE and user state
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# OS files
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+## Local runnable package (not uploaded to GitHub)
+local-app/
+OPEN ACCOUNT SWITCHER.cmd
+TRUST THIS GIT FOLDER.cmd

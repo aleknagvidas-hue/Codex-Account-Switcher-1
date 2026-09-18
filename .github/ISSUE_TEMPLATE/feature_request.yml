@@ -1,0 +1,25 @@
+name: Feature request
+description: Suggest a focused improvement that preserves the project's safety boundaries.
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What user problem should this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+    validations:
+      required: true
+  - type: checkboxes
+    id: boundaries
+    attributes:
+      label: Project boundaries
+      options:
+        - label: This request does not involve credential sharing, subscription pooling, limit circumvention, or automatic account rotation.
+          required: true
