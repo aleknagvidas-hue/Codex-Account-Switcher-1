@@ -71,6 +71,7 @@ public sealed class PanelController : INotifyPropertyChanged
     public async Task TickAsync()
     {
         foreach (var account in Accounts) { account.FreshForMinutes = RefreshMinutes * 2; account.RefreshBindings(); }
+        UpdateAvailabilityOrder();
         if (BackgroundRefresh && !Busy && _protocolVerified && !IsDemo) await RefreshAsync(false);
     }
 
@@ -132,6 +133,7 @@ public sealed class PanelController : INotifyPropertyChanged
                 }
                 await _store.SaveProfileAsync(account.Profile, token);
             }
+            UpdateAvailabilityOrder();
             if (checkedCount > 0) Status = "Refresh complete. Stale and unavailable readings are labelled; failed accounts will retry with backoff.";
         }, clearError: force);
     }
@@ -243,9 +245,30 @@ public sealed class PanelController : INotifyPropertyChanged
         {
             var account = new AccountProfileViewModel(profile) { FreshForMinutes = RefreshMinutes * 2 };
             Accounts.Add(account);
-            PanelAccounts.Add(account);
         }
-        MarkActive(); Notify(nameof(IsEmpty)); Notify(nameof(Summary));
+        MarkActive();
+        UpdateAvailabilityOrder();
+        Notify(nameof(IsEmpty)); Notify(nameof(Summary));
+    }
+
+    private void UpdateAvailabilityOrder()
+    {
+        var ordered = Accounts
+            .OrderBy(account => account.AvailabilitySortGroup)
+            .ThenBy(account => account.AvailabilitySortGroup == 0 ? -account.AvailabilityCapacityScore : double.MaxValue)
+            .ThenBy(account => account.AvailableAt ?? DateTimeOffset.MaxValue)
+            .ThenBy(account => account.Profile.CreatedAt)
+            .ToList();
+
+        for (var index = 0; index < ordered.Count; index++)
+        {
+            ordered[index].ResetOrder = index + 1;
+            ordered[index].IsTopChoice = index == 0;
+        }
+
+        if (PanelAccounts.SequenceEqual(ordered)) return;
+        PanelAccounts.Clear();
+        foreach (var account in ordered) PanelAccounts.Add(account);
     }
     private void MarkActive()
     {
@@ -320,19 +343,28 @@ public sealed class PanelController : INotifyPropertyChanged
         var colors = new[] { "#A89BFF", "#62D5B4", "#F1AE80", "#88B9F2" };
         for (var i = 0; i < 4; i++)
         {
+            var shortRemaining = i switch { 0 => 74d, 1 => 0d, 2 => 0d, _ => 82d };
+            var weeklyRemaining = i switch { 0 => 61d, 1 => 48d, 2 => 36d, _ => 0d };
+            var shortReset = i switch
+            {
+                1 => DateTimeOffset.UtcNow.AddMinutes(42),
+                2 => DateTimeOffset.UtcNow.AddHours(2.4),
+                _ => DateTimeOffset.UtcNow.AddHours(4)
+            };
+            var weeklyReset = i == 3 ? DateTimeOffset.UtcNow.AddDays(2.2) : DateTimeOffset.UtcNow.AddDays(3 + i);
             var vm = new AccountProfileViewModel(new AccountProfile
             {
                 DisplayName = names[i], ColorHex = colors[i],
                 Usage = new UsageSnapshot
                 {
-                    Status = i == 2 ? "stale" : "available", PlanType = "plus",
-                    CheckedAt = DateTimeOffset.UtcNow.AddMinutes(i == 2 ? -18 : -1),
-                    ShortTerm = new UsageWindow { RemainingPercent = 82 - i * 19, WindowDurationMinutes = 300, ResetsAt = DateTimeOffset.UtcNow.AddHours(i + 1) },
-                    Weekly = i == 3 ? null : new UsageWindow { RemainingPercent = 64 - i * 21, WindowDurationMinutes = 10080, ResetsAt = DateTimeOffset.UtcNow.AddDays(2 + i) }
+                    Status = "available", PlanType = "plus", CheckedAt = DateTimeOffset.UtcNow.AddMinutes(-1),
+                    ShortTerm = new UsageWindow { RemainingPercent = shortRemaining, WindowDurationMinutes = 300, ResetsAt = shortReset },
+                    Weekly = new UsageWindow { RemainingPercent = weeklyRemaining, WindowDurationMinutes = 10080, ResetsAt = weeklyReset }
                 }
             }) { IsActive = i == 0 };
-            Accounts.Add(vm); PanelAccounts.Add(vm);
+            Accounts.Add(vm);
         }
+        UpdateAvailabilityOrder();
         Status = "Preview only. No real accounts, network requests, or switching.";
     }
     public event PropertyChangedEventHandler? PropertyChanged;

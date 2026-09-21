@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Added reset-order ranking, large numbered account cards, colored countdown clocks, and clear available/waiting states
+- Accounts now sort by current usability and earliest blocking reset while keeping exact 5-hour and weekly reset times visible
 - Removed the artificial four-account storage and display limit; all saved accounts now appear in the scrollable panel
 - Saved-account switching no longer starts a browser login or depends on a private website session
 - Switch installs the selected encrypted saved login directly and restarts both the desktop GUI and detached App Server

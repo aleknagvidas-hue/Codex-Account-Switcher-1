@@ -59,6 +59,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ("official rate-limit response is parsed", UsageResponseIsParsed),
     ("short-only limit is not mislabeled weekly", ShortOnlyUsageIsNotWeekly),
     ("usage dates remain English across OS locales", UsageDatesStayEnglish),
+    ("visual availability indicators rank usable and resetting accounts", AvailabilityIndicatorsRankAccounts),
     ("isolated switch preserves departing auth and backup", SwitchIsAtomicAndPreservesState),
     ("Codex file credential store is placed at TOML root", CredentialStoreSettingIsRooted),
     ("failed account verification restores the previous sign-in", VerificationFailureRestoresPreviousSignIn),
@@ -262,6 +263,47 @@ static async Task<int> RunFakeServer(string mode)
         Console.WriteLine(JsonSerializer.Serialize(new { id = id.GetInt32(), result }));
     }
     return 0;
+}
+
+static Task AvailabilityIndicatorsRankAccounts()
+{
+    var now = DateTimeOffset.UtcNow;
+    AccountProfileViewModel Account(string name, double shortRemaining, DateTimeOffset shortReset, double weeklyRemaining, DateTimeOffset weeklyReset) =>
+        new(new AccountProfile
+        {
+            DisplayName = name,
+            Usage = new UsageSnapshot
+            {
+                Status = "available",
+                CheckedAt = now,
+                ShortTerm = new UsageWindow { RemainingPercent = shortRemaining, ResetsAt = shortReset },
+                Weekly = new UsageWindow { RemainingPercent = weeklyRemaining, ResetsAt = weeklyReset }
+            }
+        }) { FreshForMinutes = 30 };
+
+    var available = Account("Available", 54, now.AddHours(3), 32, now.AddDays(3));
+    var soon = Account("Soon", 0, now.AddMinutes(40), 44, now.AddDays(2));
+    var later = Account("Later", 0, now.AddHours(6), 29, now.AddDays(4));
+    var bothBlocked = Account("Both", 0, now.AddMinutes(30), 0, now.AddDays(2));
+    var unknown = new AccountProfileViewModel(new AccountProfile { DisplayName = "Unknown" });
+
+    True(available.IsAvailableNow, "positive known windows are available now");
+    Equal("#5BE0A4", available.ClockBrush, "available clock is green");
+    True(soon.IsWaitingForReset, "exhausted short window is waiting");
+    Equal("#5BE0A4", soon.ClockBrush, "near reset clock is green");
+    Equal("#FF6B72", later.ClockBrush, "long reset clock is red");
+    Equal(bothBlocked.Profile.Usage!.Weekly!.ResetsAt, bothBlocked.AvailableAt, "usable time waits for every blocking window");
+    Equal(3, unknown.AvailabilitySortGroup, "unknown readings rank last");
+
+    var ordered = new[] { later, unknown, soon, available }
+        .OrderBy(account => account.AvailabilitySortGroup)
+        .ThenBy(account => account.AvailableAt ?? DateTimeOffset.MaxValue)
+        .ToArray();
+    Equal("Available", ordered[0].DisplayName, "available account ranks first");
+    Equal("Soon", ordered[1].DisplayName, "earliest reset ranks next");
+    Equal("Later", ordered[2].DisplayName, "later reset follows");
+    Equal("Unknown", ordered[3].DisplayName, "unknown account ranks last");
+    return Task.CompletedTask;
 }
 
 static async Task PreflightRetainsRotatedCredentials()
