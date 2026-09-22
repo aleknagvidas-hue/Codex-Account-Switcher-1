@@ -25,11 +25,12 @@ echo Building Codex Account Switcher for Windows x64...
 dotnet publish ".\src\CodexAccountSwitcher\CodexAccountSwitcher.csproj" ^
     -c Release ^
     -r win-x64 ^
-    --self-contained false ^
+    --self-contained true ^
     -p:PublishSingleFile=true ^
+    -p:IncludeNativeLibrariesForSelfExtract=true ^
     -p:DebugType=None ^
     -p:DebugSymbols=false ^
-    -o ".\artifacts\win-x64"
+    -o ".\Account"
 
 if errorlevel 1 (
     echo.
@@ -38,7 +39,7 @@ if errorlevel 1 (
     goto finish
 )
 
-if not exist ".\artifacts\win-x64\CodexAccountSwitcher.exe" (
+if not exist ".\Account\CodexAccountSwitcher.exe" (
     echo.
     echo ERROR: Build completed without the expected executable.
     set "RESULT=1"
@@ -47,7 +48,7 @@ if not exist ".\artifacts\win-x64\CodexAccountSwitcher.exe" (
 
 echo.
 echo Build completed successfully.
-echo Output: %~dp0artifacts\win-x64\CodexAccountSwitcher.exe
+echo Output: %~dp0Account\CodexAccountSwitcher.exe
 set "RESULT=0"
 
 :finish

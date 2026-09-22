@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Forms = System.Windows.Forms;
 
 namespace CodexAccountSwitcher.Services;
@@ -19,7 +20,8 @@ internal sealed class TrayIconService : IDisposable
         _menu.Items.Add("Quit", null, (_, _) => quit());
         _icon = new Forms.NotifyIcon
         {
-            Icon = System.Drawing.SystemIcons.Application,
+            Icon = System.Drawing.Icon.ExtractAssociatedIcon(Process.GetCurrentProcess().MainModule!.FileName!)
+                ?? System.Drawing.SystemIcons.Application,
             Text = "Codex Account Switcher",
             ContextMenuStrip = _menu,
             Visible = true

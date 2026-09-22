@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Added a dedicated Account app icon and a single final desktop-launch workflow
+- Newly added accounts are now revealed automatically, and reopening the app reloads profiles from disk
 - Added reset-order ranking, large numbered account cards, colored countdown clocks, and clear available/waiting states
 - Accounts now sort by current usability and earliest blocking reset while keeping exact 5-hour and weekly reset times visible
 - Removed the artificial four-account storage and display limit; all saved accounts now appear in the scrollable panel

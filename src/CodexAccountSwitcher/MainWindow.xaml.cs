@@ -31,6 +31,8 @@ public partial class MainWindow : Window
         Services.DiagnosticTrace.Write("xaml initialized");
         _controller = new PanelController(demo);
         _controller.ErrorRaised += message => _tray?.ShowError(message);
+        _controller.AccountAdded += account => Dispatcher.BeginInvoke(
+            () => RevealAccount(account), DispatcherPriority.Loaded);
         DataContext = _controller;
         SourceInitialized += (_, _) => Services.WindowBackdrop.Apply(this);
         StartWithWindowsCheckBox.IsEnabled = !demo;
@@ -84,7 +86,22 @@ public partial class MainWindow : Window
         Topmost = true;
         Topmost = false;
         Focus();
+        _ = _controller.ReloadVisibleAccountsAsync();
         Services.DiagnosticTrace.Write("panel shown and activated");
+    }
+
+    private void RevealAccount(AccountProfileViewModel account)
+    {
+        AccountsList.UpdateLayout();
+        if (AccountsList.ItemContainerGenerator.ContainerFromItem(account) is FrameworkElement item)
+        {
+            item.BringIntoView();
+            Services.DiagnosticTrace.Write($"new account revealed: {account.Profile.Id}");
+            return;
+        }
+
+        AccountsScrollViewer.ScrollToEnd();
+        Services.DiagnosticTrace.Write($"new account reveal used scroll fallback: {account.Profile.Id}");
     }
 
     private async void Refresh_Click(object sender, RoutedEventArgs e) => await _controller.RefreshAsync(true);

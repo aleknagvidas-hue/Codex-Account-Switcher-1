@@ -68,6 +68,16 @@ public sealed class PanelController : INotifyPropertyChanged
         });
     }
 
+    public Task ReloadVisibleAccountsAsync()
+    {
+        if (Busy || IsDemo) return Task.CompletedTask;
+        return ExecuteAsync("Reloading saved accounts…", async token =>
+        {
+            await ReloadAsync(token);
+            Status = "Saved accounts reloaded.";
+        }, clearError: false);
+    }
+
     public async Task TickAsync()
     {
         foreach (var account in Accounts) { account.FreshForMinutes = RefreshMinutes * 2; account.RefreshBindings(); }
@@ -160,14 +170,18 @@ public sealed class PanelController : INotifyPropertyChanged
         EnsureReal();
         var browserProfileKey = Guid.NewGuid().ToString("N");
         var login = await _server.LoginAsync(browserProfileKey, token);
+        string? addedProfileId = null;
         try
         {
             var profile = await _store.AddAsync(alias, color, login.AuthJson, browserProfileKey, token);
+            addedProfileId = profile.Id;
             profile.Usage = new UsageSnapshot { PlanType = login.PlanType, CheckedAt = DateTimeOffset.MinValue };
             await _store.SaveProfileAsync(profile, token);
         }
         finally { System.Security.Cryptography.CryptographicOperations.ZeroMemory(login.AuthJson); }
         await ReloadAsync(token);
+        var addedAccount = Accounts.FirstOrDefault(account => account.Profile.Id == addedProfileId);
+        if (addedAccount is not null) AccountAdded?.Invoke(addedAccount);
         Status = "Account added with its own private website session. Your active Codex account was not changed.";
     });
     public Task SwitchAsync(AccountProfileViewModel account) => ExecuteAsync("Checking selected sign-in…", async token =>
@@ -240,6 +254,7 @@ public sealed class PanelController : INotifyPropertyChanged
     private async Task ReloadAsync(CancellationToken token)
     {
         var profiles = await _store.LoadAsync(token);
+        DiagnosticTrace.Write($"profiles loaded: {profiles.Count}");
         Accounts.Clear(); PanelAccounts.Clear();
         foreach (var profile in profiles.OrderBy(x => x.CreatedAt))
         {
@@ -369,5 +384,6 @@ public sealed class PanelController : INotifyPropertyChanged
     }
     public event PropertyChangedEventHandler? PropertyChanged;
     public event Action<string>? ErrorRaised;
+    public event Action<AccountProfileViewModel>? AccountAdded;
     private void Notify([CallerMemberName] string? name = null) => PropertyChanged?.Invoke(this, new(name));
 }

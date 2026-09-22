@@ -35,5 +35,7 @@ Desktop.ini
 
 ## Local runnable package (not uploaded to GitHub)
 local-app/
+Account/
+Account.lnk
 OPEN ACCOUNT SWITCHER.cmd
 TRUST THIS GIT FOLDER.cmd

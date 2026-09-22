@@ -8,10 +8,12 @@
     <Nullable>enable</Nullable>
     <AssemblyName>CodexAccountSwitcher</AssemblyName>
     <RootNamespace>CodexAccountSwitcher</RootNamespace>
-    <Version>1.1.2-beta.21</Version>
+    <Version>1.1.2-beta.22</Version>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\Account.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="CodexAccountSwitcher.Tests" />
+    <Resource Include="Assets\Account.ico" />
   </ItemGroup>
 </Project>

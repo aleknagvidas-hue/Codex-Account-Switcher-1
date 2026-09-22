@@ -884,8 +884,12 @@ static Task DialogsLoad()
             app.InitializeComponent();
             var accountDialog = new CodexAccountSwitcher.AccountDialog("test");
             var confirmDialog = new CodexAccountSwitcher.ConfirmDialog("test", "message", "ok");
+            var mainWindow = new CodexAccountSwitcher.MainWindow(demo: true);
+            True(mainWindow.FindName("AccountsScrollViewer") is System.Windows.Controls.ScrollViewer, "account scroller exists");
+            True(mainWindow.FindName("AccountsList") is System.Windows.Controls.ItemsControl, "account list exists");
             accountDialog.Close();
             confirmDialog.Close();
+            mainWindow.CloseForRendering();
             using var tray = new TrayIconService(() => { }, () => { }, () => { });
             True(tray.IsVisible, "notification icon is registered");
             tray.SetBusy(true);
