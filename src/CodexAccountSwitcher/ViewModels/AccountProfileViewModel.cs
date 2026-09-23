@@ -23,6 +23,30 @@ public sealed class AccountProfileViewModel : INotifyPropertyChanged
         ? "Codex account"
         : $"Codex • {Profile.Usage.PlanType!.ToUpperInvariant()}";
 
+    public DateTimeOffset MembershipEndsAt => Profile.CreatedAt.AddMonths(1);
+    public string AddedAtText => Profile.CreatedAt.ToLocalTime()
+        .ToString("dd MMM yyyy  •  HH:mm", CultureInfo.InvariantCulture);
+    public string MembershipEndsText => MembershipEndsAt.ToLocalTime()
+        .ToString("dd MMM yyyy  •  HH:mm", CultureInfo.InvariantCulture);
+    public bool MembershipExpired => MembershipEndsAt <= DateTimeOffset.UtcNow;
+    public string MembershipRemainingText => FormatMembershipRemaining(MembershipEndsAt, DateTimeOffset.UtcNow);
+    public string MembershipBrush
+    {
+        get
+        {
+            var remaining = MembershipEndsAt - DateTimeOffset.UtcNow;
+            if (remaining <= TimeSpan.Zero) return "#FF6B72";
+            if (remaining <= TimeSpan.FromDays(3)) return "#FFB45E";
+            return "#5BE0A4";
+        }
+    }
+    public string MembershipSurface => MembershipBrush switch
+    {
+        "#5BE0A4" => "#235BE0A4",
+        "#FFB45E" => "#24FFB45E",
+        _ => "#24FF6B72"
+    };
+
     public bool IsActive
     {
         get => _isActive;
@@ -222,6 +246,13 @@ public sealed class AccountProfileViewModel : INotifyPropertyChanged
         Notify(nameof(ColorHex));
         Notify(nameof(Initial));
         Notify(nameof(PlanText));
+        Notify(nameof(MembershipEndsAt));
+        Notify(nameof(AddedAtText));
+        Notify(nameof(MembershipEndsText));
+        Notify(nameof(MembershipExpired));
+        Notify(nameof(MembershipRemainingText));
+        Notify(nameof(MembershipBrush));
+        Notify(nameof(MembershipSurface));
         Notify(nameof(ShortTermValue));
         Notify(nameof(WeeklyValue));
         Notify(nameof(ShortTermPercentText));
@@ -282,5 +313,23 @@ public sealed class AccountProfileViewModel : INotifyPropertyChanged
         if (duration.TotalHours >= 1)
             return $"{Math.Floor(duration.TotalHours):0}h {duration.Minutes}m";
         return $"{Math.Max(1, Math.Ceiling(duration.TotalMinutes)):0}m";
+    }
+
+    internal static string FormatMembershipRemaining(DateTimeOffset endsAt, DateTimeOffset now)
+    {
+        var remaining = endsAt - now;
+        if (remaining <= TimeSpan.Zero)
+        {
+            var elapsed = -remaining;
+            if (elapsed.TotalDays >= 1)
+                return $"Expired {Math.Floor(elapsed.TotalDays):0} days ago";
+            return "Expired today";
+        }
+
+        if (remaining.TotalDays >= 1)
+            return $"{Math.Ceiling(remaining.TotalDays):0} days left";
+        if (remaining.TotalHours >= 1)
+            return $"{Math.Ceiling(remaining.TotalHours):0} hours left";
+        return $"{Math.Max(1, Math.Ceiling(remaining.TotalMinutes)):0} min left";
     }
 }

@@ -50,7 +50,7 @@ The implementation follows the documented `account/login/start` external-token m
 ## Source and validation
 
 - Upstream reviewed commit: `cd5ac60a876aa5a6dec6df8f95546efa117368c6`.
-- Variant version: 1.1.2-beta.22.
+- Variant version: 1.1.2-beta.23.
 - Deterministic tests cover rollback isolation, cancellation recovery, no-force shutdown, usage parsing, token exclusion, serialized operations, backoff, and XAML construction.
 - Integration tests use a synthetic token and isolated home to check the installed App Server; they never read or change the user's active sign-in.
 - A successful local build and test do not prove future Codex App Server compatibility.

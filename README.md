@@ -29,6 +29,7 @@ It does **not** keep multiple accounts active in one Codex window. It does **not
 - Encrypt saved credential payloads with Windows DPAPI
 - Keep account labels private instead of displaying email addresses or service usernames
 - Show short-term and weekly usage windows when the installed Codex App Server returns them
+- Show when each account was added, when its tracked calendar month ends, and the time remaining
 - Preserve a local backup during atomic authentication replacement
 - Stop only the packaged `OpenAI.Codex_*` desktop process tree
 - Build from source with one double-click
@@ -50,7 +51,7 @@ Visual Studio is optional. The .NET SDK is sufficient.
 4. Run:
 
    ```text
-   artifacts\win-x64\CodexAccountSwitcher.exe
+   Account\CodexAccountSwitcher.exe
    ```
 
 The first build may need internet access to restore .NET packages.
@@ -69,14 +70,15 @@ cd codex-account-switcher-windows
 dotnet publish .\src\CodexAccountSwitcher\CodexAccountSwitcher.csproj `
   -c Release `
   -r win-x64 `
-  --self-contained false `
+  --self-contained true `
   -p:PublishSingleFile=true `
+  -p:IncludeNativeLibrariesForSelfExtract=true `
   -p:DebugType=None `
   -p:DebugSymbols=false `
-  -o .\artifacts\win-x64
+  -o .\Account
 ```
 
-The output is framework-dependent. A machine that only runs the resulting executable needs the .NET 8 Desktop Runtime.
+The output is self-contained, so the computer running it does not need a separate .NET Desktop Runtime installation.
 
 ## Usage
 

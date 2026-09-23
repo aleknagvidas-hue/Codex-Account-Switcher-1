@@ -59,6 +59,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ("official rate-limit response is parsed", UsageResponseIsParsed),
     ("short-only limit is not mislabeled weekly", ShortOnlyUsageIsNotWeekly),
     ("usage dates remain English across OS locales", UsageDatesStayEnglish),
+    ("membership dates use one calendar month and show time remaining", MembershipDatesTrackOneMonth),
     ("visual availability indicators rank usable and resetting accounts", AvailabilityIndicatorsRankAccounts),
     ("isolated switch preserves departing auth and backup", SwitchIsAtomicAndPreservesState),
     ("Codex file credential store is placed at TOML root", CredentialStoreSettingIsRooted),
@@ -230,6 +231,28 @@ static Task UsageDatesStayEnglish()
         CultureInfo.CurrentCulture = originalCulture;
         CultureInfo.CurrentUICulture = originalUiCulture;
     }
+}
+
+static Task MembershipDatesTrackOneMonth()
+{
+    var addedAt = new DateTimeOffset(2026, 1, 31, 14, 25, 0, TimeSpan.Zero);
+    var viewModel = new AccountProfileViewModel(new AccountProfile { CreatedAt = addedAt });
+
+    Equal(new DateTimeOffset(2026, 2, 28, 14, 25, 0, TimeSpan.Zero), viewModel.MembershipEndsAt,
+        "month end follows calendar-month rules");
+    True(viewModel.AddedAtText.Contains("2026", StringComparison.Ordinal), "added date is visible");
+    True(viewModel.MembershipEndsText.Contains("2026", StringComparison.Ordinal), "month end date is visible");
+
+    var now = new DateTimeOffset(2026, 2, 1, 10, 0, 0, TimeSpan.Zero);
+    Equal("30 days left", AccountProfileViewModel.FormatMembershipRemaining(now.AddDays(29).AddMinutes(1), now),
+        "partial days round up for the owner");
+    Equal("12 hours left", AccountProfileViewModel.FormatMembershipRemaining(now.AddHours(12), now),
+        "last day reports hours");
+    Equal("Expired today", AccountProfileViewModel.FormatMembershipRemaining(now, now),
+        "exact end is expired");
+    Equal("Expired 2 days ago", AccountProfileViewModel.FormatMembershipRemaining(now.AddDays(-2), now),
+        "past memberships report elapsed days");
+    return Task.CompletedTask;
 }
 
 static async Task<int> RunFakeServer(string mode)

@@ -1,29 +1,29 @@
-# Account Switcher Finalization Plan
+# Account Switcher Project Plan
 
 ## Goal
 
-Keep one final Account Switcher that always opens the newest version, immediately shows newly added accounts, and has one desktop shortcut named **Account**.
+Keep one reliable Account Switcher that opens correctly, supports unlimited saved accounts, and shows each account's one-month membership dates.
 
 ## Finished means
 
-The desktop shortcut opens the newest app, new accounts appear in that same app, old runnable copies are removed, and the final workflow is checked on this computer.
+The final local app opens from the Account launcher, shows the exact date each account was added, shows the date one calendar month ends, shows the live time remaining, and passes the full test and packaged-app checks.
 
 ## Steps
 
-- [x] Identify the main project folder and confirm the newest source version.
-- [x] Trace every launcher, executable, saved-account location, and running copy.
-- [x] Fix the add-account refresh problem in the newest source.
-- [x] Build one final application folder from the newest source.
-- [x] Replace every old runnable copy with beta.22 and redirect the old launcher to the final app.
-- [ ] **CURRENT:** Put the prepared **Account** shortcut on the desktop with the application logo.
-- [x] Check that the launcher opens the final version and reloads all saved accounts.
-- [x] Commit the final source changes and deliver the working local result.
-- [ ] **CURRENT:** Push the committed updates to the connected GitHub repository.
+- [x] Confirm `Codex-Account-Switcher` is the authoritative beta.22 source and inspect the saved account format.
+- [x] Confirm existing saved accounts already contain exact added timestamps.
+- [x] Add the added date, one-month end date, and live time remaining to every account card.
+- [x] Add automated checks for calendar-month calculations and expiry labels.
+- [x] Build the new self-contained application package.
+- [x] Check the packaged app opens visibly and renders the new membership information.
+- [x] Replace the local runnable copy and launcher with the verified build.
+- [x] Confirm the beta.23 window opens and loads all five saved accounts on this computer.
+- [ ] **BLOCKED:** Enable Start with Windows after the managed environment stops denying the required registry write.
 
 ## Next action
 
-Retry the GitHub push when network access is available.
+Tick **Start with Windows** once from an app instance launched normally outside the managed workspace.
 
 ## Waiting on the user
 
-Windows blocked this task from writing to the Desktop or startup registry, so `Account.lnk` still needs to be copied to the Desktop and **Start with Windows** must be ticked once in the app. This environment also cannot connect to GitHub over HTTPS, so the push is waiting on network access.
+The membership feature is finished; only the earlier Start with Windows setting is waiting because Windows denied the registry change from this managed session.
