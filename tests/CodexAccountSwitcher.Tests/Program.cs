@@ -48,6 +48,8 @@ var tests = new (string Name, Func<Task> Run)[]
     ("encrypted profile auth round-trips through the credential protector", ProfileRoundTrip),
     ("account browser profile is stored with its saved sign-in", BrowserProfileIsStored),
     ("browser profile rejects path traversal", BrowserProfileRejectsTraversal),
+    ("purchase link accepts safe web links and rejects unsafe schemes", PurchaseLinkValidation),
+    ("purchase link is saved and can be cleared", PurchaseLinkRoundTrip),
     ("duplicate account is rejected", DuplicateRejected),
     ("invalid and API-key auth is rejected", InvalidAuthIsRejected),
     ("startup command safely quotes the executable path", AutostartCommandIsQuoted),
@@ -584,6 +586,46 @@ static async Task BrowserProfileRejectsTraversal()
     {
         BrowserProfileService.ValidateProfileKey("..\\outside");
         return Task.CompletedTask;
+    });
+}
+
+static async Task PurchaseLinkValidation()
+{
+    Equal("https://example.com/order/42", PurchaseLinkService.Normalize("  https://example.com/order/42  "),
+        "safe purchase link is normalized");
+    Equal("example.com", PurchaseLinkService.DisplayHost("https://www.example.com/order/42"),
+        "seller host is readable");
+    var startInfo = PurchaseLinkService.BuildStartInfo("https://example.com/order/42");
+    Equal("https://example.com/order/42", startInfo.FileName, "safe link becomes the launch target");
+    True(startInfo.UseShellExecute, "purchase link opens through the default browser");
+    await Throws<ArgumentException>(() =>
+    {
+        PurchaseLinkService.Normalize("file:///C:/secret.txt");
+        return Task.CompletedTask;
+    });
+    await Throws<ArgumentException>(() =>
+    {
+        PurchaseLinkService.Normalize("javascript:alert(1)");
+        return Task.CompletedTask;
+    });
+}
+
+static async Task PurchaseLinkRoundTrip()
+{
+    await WithTempDirectory(async root =>
+    {
+        var store = TestStore(root);
+        var key = Guid.NewGuid().ToString("N");
+        var added = await store.AddAsync(
+            "Purchased account", "#7C8CFF", Auth("purchase-link", "x", "y"), key,
+            "https://seller.example/orders/123");
+        var loaded = (await store.LoadAsync()).Single();
+        Equal("https://seller.example/orders/123", added.PurchaseUrl, "purchase link on added account");
+        Equal(added.PurchaseUrl, loaded.PurchaseUrl, "purchase link in metadata");
+
+        loaded.PurchaseUrl = null;
+        await store.SaveProfileAsync(loaded);
+        True((await store.LoadAsync()).Single().PurchaseUrl is null, "edit can clear purchase link");
     });
 }
 

@@ -43,15 +43,26 @@ public sealed class ProfileStore
 
     public Task<AccountProfile> AddAsync(
         string displayName, string colorHex, byte[] authJson, CancellationToken cancellationToken = default) =>
-        SaveAccountAsync(displayName, colorHex, authJson, false, null, cancellationToken);
+        SaveAccountAsync(displayName, colorHex, authJson, false, null, null, cancellationToken);
 
     public Task<AccountProfile> AddAsync(
         string displayName, string colorHex, byte[] authJson, string browserProfileKey, CancellationToken cancellationToken = default) =>
-        SaveAccountAsync(displayName, colorHex, authJson, false, BrowserProfileService.ValidateProfileKey(browserProfileKey), cancellationToken);
+        SaveAccountAsync(displayName, colorHex, authJson, false, BrowserProfileService.ValidateProfileKey(browserProfileKey), null, cancellationToken);
+
+    public Task<AccountProfile> AddAsync(
+        string displayName, string colorHex, byte[] authJson, string browserProfileKey, string? purchaseUrl,
+        CancellationToken cancellationToken = default) =>
+        SaveAccountAsync(displayName, colorHex, authJson, false,
+            BrowserProfileService.ValidateProfileKey(browserProfileKey), purchaseUrl, cancellationToken);
 
     public Task<AccountProfile> SaveCurrentAsync(
         string displayName, string colorHex, byte[] authJson, CancellationToken cancellationToken = default) =>
-        SaveAccountAsync(displayName, colorHex, authJson, true, null, cancellationToken);
+        SaveAccountAsync(displayName, colorHex, authJson, true, null, null, cancellationToken);
+
+    public Task<AccountProfile> SaveCurrentAsync(
+        string displayName, string colorHex, byte[] authJson, string? purchaseUrl,
+        CancellationToken cancellationToken = default) =>
+        SaveAccountAsync(displayName, colorHex, authJson, true, null, purchaseUrl, cancellationToken);
 
     private async Task<AccountProfile> SaveAccountAsync(
         string displayName,
@@ -59,9 +70,11 @@ public sealed class ProfileStore
         byte[] authJson,
         bool renewExisting,
         string? browserProfileKey,
+        string? purchaseUrl,
         CancellationToken cancellationToken = default)
     {
         var alias = ValidateAlias(displayName);
+        var normalizedPurchaseUrl = PurchaseLinkService.Normalize(purchaseUrl);
         var fingerprint = AuthIdentity.ValidateAndFingerprint(authJson);
 
         await _gate.WaitAsync(cancellationToken);
@@ -74,11 +87,18 @@ public sealed class ProfileStore
                 if (renewExisting)
                 {
                     await WriteEncryptedAuthAsync(existing.Id, authJson, cancellationToken);
+                    var metadataChanged = false;
                     if (existing.BrowserProfileKey is null && browserProfileKey is not null)
                     {
                         existing.BrowserProfileKey = browserProfileKey;
-                        await SaveMetadataUnlockedAsync(profiles, cancellationToken);
+                        metadataChanged = true;
                     }
+                    if (normalizedPurchaseUrl is not null && existing.PurchaseUrl != normalizedPurchaseUrl)
+                    {
+                        existing.PurchaseUrl = normalizedPurchaseUrl;
+                        metadataChanged = true;
+                    }
+                    if (metadataChanged) await SaveMetadataUnlockedAsync(profiles, cancellationToken);
                     return existing;
                 }
                 throw new InvalidOperationException("This account is already saved.");
@@ -90,6 +110,7 @@ public sealed class ProfileStore
                 ColorHex = ValidateColor(colorHex),
                 Fingerprint = fingerprint,
                 BrowserProfileKey = browserProfileKey,
+                PurchaseUrl = normalizedPurchaseUrl,
                 CreatedAt = DateTimeOffset.UtcNow
             };
 
@@ -161,6 +182,7 @@ public sealed class ProfileStore
     {
         profile.DisplayName = ValidateAlias(profile.DisplayName);
         profile.ColorHex = ValidateColor(profile.ColorHex);
+        profile.PurchaseUrl = PurchaseLinkService.Normalize(profile.PurchaseUrl);
 
         await _gate.WaitAsync(cancellationToken);
         try

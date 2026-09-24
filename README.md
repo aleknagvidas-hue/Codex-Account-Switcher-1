@@ -30,6 +30,7 @@ It does **not** keep multiple accounts active in one Codex window. It does **not
 - Keep account labels private instead of displaying email addresses or service usernames
 - Show short-term and weekly usage windows when the installed Codex App Server returns them
 - Show when each account was added, when its tracked calendar month ends, and the time remaining
+- Save an optional seller, listing, receipt, or order link and open it from the account card
 - Preserve a local backup during atomic authentication replacement
 - Stop only the packaged `OpenAI.Codex_*` desktop process tree
 - Build from source with one double-click
@@ -87,17 +88,19 @@ The output is self-contained, so the computer running it does not need a separat
 1. Open Codex and make sure it is signed in to the account you want to save.
 2. Start Codex Account Switcher.
 3. Select **Save current account**.
-4. Enter a private label and choose a color.
+4. Enter a private label, optionally paste the purchase link, and choose a color.
 
 Labels are never derived from the authentication payload. You do not need to enter an email address or OpenAI username.
 
 ### Add another account
 
 1. Select **Sign in with another account**.
-2. Enter a private label and choose a color.
+2. Enter a private label, optionally paste the purchase link, and choose a color.
 3. Complete sign-in in the browser window that opens.
 
 The login runs in a temporary isolated `CODEX_HOME`. Adding an account does not change the account currently active in the open Codex window.
+
+Purchase links are optional local notes. Only complete `http://` and `https://` links are accepted. When saved, the seller website appears as a button on the account card and opens in your default browser. Use **Edit** to add, change, or remove the link later.
 
 If the browser automatically selects the existing account, open the sign-in URL in an InPrivate/incognito window or a separate browser profile.
 
@@ -132,7 +135,7 @@ Runtime data is stored under:
 | Data | Storage | Protection |
 | --- | --- | --- |
 | Saved authentication payloads | `profiles\*.auth.dpapi` | Windows DPAPI |
-| Labels, colors, usage cache | `profiles.json` | Plain JSON; no tokens or email addresses |
+| Labels, colors, purchase links, usage cache | `profiles.json` | Plain JSON; no tokens or email addresses |
 | Active Codex authentication | `%USERPROFILE%\.codex\auth.json` | Managed in the format required by Codex |
 | Switch backup | `%USERPROFILE%\.codex\auth.json.codex-switcher.bak` | Local rollback copy |
 

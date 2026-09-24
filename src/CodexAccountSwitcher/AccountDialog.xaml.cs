@@ -7,11 +7,16 @@ namespace CodexAccountSwitcher;
 
 public partial class AccountDialog : Window
 {
-    public AccountDialog(string title, string initialName = "", string initialColor = "#7C8CFF")
+    public AccountDialog(
+        string title,
+        string initialName = "",
+        string initialColor = "#7C8CFF",
+        string? initialPurchaseUrl = null)
     {
         InitializeComponent();
         TitleText.Text = title;
         AliasBox.Text = initialName;
+        PurchaseLinkBox.Text = initialPurchaseUrl ?? string.Empty;
         SelectedColor = initialColor;
         SourceInitialized += (_, _) => WindowBackdrop.Apply(this);
         Loaded += (_, _) =>
@@ -27,6 +32,7 @@ public partial class AccountDialog : Window
 
     public string Alias => AliasBox.Text.Trim();
     public string SelectedColor { get; private set; }
+    public string? PurchaseUrl { get; private set; }
 
     private void Color_Click(object sender, RoutedEventArgs e)
     {
@@ -41,6 +47,19 @@ public partial class AccountDialog : Window
         if (Alias.Length is < 1 or > 40)
         {
             AliasBox.Focus();
+            return;
+        }
+
+        try
+        {
+            PurchaseUrl = PurchaseLinkService.Normalize(PurchaseLinkBox.Text);
+            LinkErrorText.Visibility = Visibility.Collapsed;
+        }
+        catch (ArgumentException)
+        {
+            LinkErrorText.Visibility = Visibility.Visible;
+            PurchaseLinkBox.Focus();
+            PurchaseLinkBox.SelectAll();
             return;
         }
 

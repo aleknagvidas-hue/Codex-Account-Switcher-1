@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
@@ -127,14 +128,16 @@ public partial class MainWindow : Window
     {
         if (_controller.Busy) return;
         var dialog = new AccountDialog("Save current account") { Owner = this };
-        if (dialog.ShowDialog() == true) await _controller.SaveCurrentAsync(dialog.Alias, dialog.SelectedColor);
+        if (dialog.ShowDialog() == true)
+            await _controller.SaveCurrentAsync(dialog.Alias, dialog.SelectedColor, dialog.PurchaseUrl);
     }
 
     private async void Login_Click(object sender, RoutedEventArgs e)
     {
         if (_controller.Busy) return;
         var dialog = new AccountDialog("Add another account") { Owner = this };
-        if (dialog.ShowDialog() == true) await _controller.LoginAsync(dialog.Alias, dialog.SelectedColor);
+        if (dialog.ShowDialog() == true)
+            await _controller.LoginAsync(dialog.Alias, dialog.SelectedColor, dialog.PurchaseUrl);
     }
 
     private async void Switch_Click(object sender, RoutedEventArgs e)
@@ -164,8 +167,25 @@ public partial class MainWindow : Window
     private async void Rename_Click(object sender, RoutedEventArgs e)
     {
         if (_controller.Busy || sender is not Button { Tag: AccountProfileViewModel account }) return;
-        var dialog = new AccountDialog("Edit private label", account.DisplayName, account.ColorHex) { Owner = this };
-        if (dialog.ShowDialog() == true) await _controller.RenameAsync(account, dialog.Alias, dialog.SelectedColor);
+        var dialog = new AccountDialog(
+            "Edit account details", account.DisplayName, account.ColorHex, account.Profile.PurchaseUrl) { Owner = this };
+        if (dialog.ShowDialog() == true)
+            await _controller.RenameAsync(account, dialog.Alias, dialog.SelectedColor, dialog.PurchaseUrl);
+    }
+
+    private void PurchaseLink_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: AccountProfileViewModel account } || !account.HasPurchaseLink) return;
+        try
+        {
+            Process.Start(Services.PurchaseLinkService.BuildStartInfo(account.Profile.PurchaseUrl!));
+            _controller.SetStatus($"Opened the purchase link for {account.DisplayName}.");
+        }
+        catch (Exception ex)
+        {
+            Services.DiagnosticTrace.Write($"purchase link open failed: {ex.GetType().Name}");
+            _controller.SetStatus("The purchase link could not be opened. Edit the account and check the link.");
+        }
     }
 
     private async void Delete_Click(object sender, RoutedEventArgs e)

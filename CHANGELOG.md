@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Added an optional purchase-source link to account creation and editing, with a safe seller-site button on each saved account card
 - Added the exact date and time each account was saved, the date one calendar month ends, and a live days/hours remaining badge
 - Added a dedicated Account app icon and a single final desktop-launch workflow
 - Newly added accounts are now revealed automatically, and reopening the app reloads profiles from disk

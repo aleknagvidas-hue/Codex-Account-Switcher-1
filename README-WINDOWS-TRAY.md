@@ -5,6 +5,7 @@ This is a local Windows adaptation of [Chisiki1/codex-account-switcher-windows](
 ## What this build does
 
 - Shows every saved account profile in one scrollable panel, with no artificial account limit.
+- Stores an optional purchase-source link and opens it from the saved account card.
 - Shows the available 5-hour and weekly remaining percentages and reset times.
 - Labels readings as stale or unavailable instead of turning failures into zero remaining.
 - Refreshes at a selectable interval of 2, 5, 10, or 15 minutes; 5 minutes is the default.
@@ -41,6 +42,8 @@ The build is unsigned. Windows may identify it as an unknown publisher. Verify `
 
 Account labels are local and need not be email addresses. Saved data is under `%LOCALAPPDATA%\CodexAccountSwitcher`; per-switch encrypted recovery backups are under `%USERPROFILE%\.codex\switcher-backups`.
 
+The optional purchase link is stored as plain local profile metadata in `profiles.json`. Only `http://` and `https://` links are accepted; the link opens in the default browser and can be changed or removed through **Edit**.
+
 ## Monitoring compatibility
 
 On startup the utility runs a synthetic, isolated compatibility probe against the installed Codex App Server. Background monitoring remains paused if the probe fails. Expired access tokens are not refreshed by the monitor; open that account in Codex to renew its sign-in, save it again, and refresh.
@@ -50,7 +53,7 @@ The implementation follows the documented `account/login/start` external-token m
 ## Source and validation
 
 - Upstream reviewed commit: `cd5ac60a876aa5a6dec6df8f95546efa117368c6`.
-- Variant version: 1.1.2-beta.23.
+- Variant version: 1.1.2-beta.24.
 - Deterministic tests cover rollback isolation, cancellation recovery, no-force shutdown, usage parsing, token exclusion, serialized operations, backoff, and XAML construction.
 - Integration tests use a synthetic token and isolated home to check the installed App Server; they never read or change the user's active sign-in.
 - A successful local build and test do not prove future Codex App Server compatibility.

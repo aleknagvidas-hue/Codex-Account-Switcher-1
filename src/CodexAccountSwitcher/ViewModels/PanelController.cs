@@ -156,16 +156,16 @@ public sealed class PanelController : INotifyPropertyChanged
         account.Profile.Usage.Message = message;
     }
 
-    public Task SaveCurrentAsync(string alias, string color) => ExecuteAsync("Saving current account…", async token =>
+    public Task SaveCurrentAsync(string alias, string color, string? purchaseUrl) => ExecuteAsync("Saving current account…", async token =>
     {
         EnsureReal();
         var auth = await File.ReadAllBytesAsync(AppPaths.CurrentAuthPath, token);
-        try { await _store.SaveCurrentAsync(alias, color, auth, token); }
+        try { await _store.SaveCurrentAsync(alias, color, auth, purchaseUrl, token); }
         finally { System.Security.Cryptography.CryptographicOperations.ZeroMemory(auth); }
         await ReloadAsync(token);
         Status = "Current sign-in saved or renewed locally. Existing labels are preserved. Use Refresh to load usage.";
     });
-    public Task LoginAsync(string alias, string color) => ExecuteAsync("Complete sign-in in your browser…", async token =>
+    public Task LoginAsync(string alias, string color, string? purchaseUrl) => ExecuteAsync("Complete sign-in in your browser…", async token =>
     {
         EnsureReal();
         var browserProfileKey = Guid.NewGuid().ToString("N");
@@ -173,7 +173,7 @@ public sealed class PanelController : INotifyPropertyChanged
         string? addedProfileId = null;
         try
         {
-            var profile = await _store.AddAsync(alias, color, login.AuthJson, browserProfileKey, token);
+            var profile = await _store.AddAsync(alias, color, login.AuthJson, browserProfileKey, purchaseUrl, token);
             addedProfileId = profile.Id;
             profile.Usage = new UsageSnapshot { PlanType = login.PlanType, CheckedAt = DateTimeOffset.MinValue };
             await _store.SaveProfileAsync(profile, token);
@@ -235,13 +235,15 @@ public sealed class PanelController : INotifyPropertyChanged
         }
         finally { System.Security.Cryptography.CryptographicOperations.ZeroMemory(login.AuthJson); }
     }
-    public Task RenameAsync(AccountProfileViewModel account, string alias, string color) => ExecuteAsync("Saving label…", async token =>
+    public Task RenameAsync(AccountProfileViewModel account, string alias, string color, string? purchaseUrl) => ExecuteAsync("Saving account details…", async token =>
     {
         EnsureReal();
-        account.Profile.DisplayName = alias; account.Profile.ColorHex = color;
+        account.Profile.DisplayName = alias;
+        account.Profile.ColorHex = color;
+        account.Profile.PurchaseUrl = PurchaseLinkService.Normalize(purchaseUrl);
         await _store.SaveProfileAsync(account.Profile, token);
         account.RefreshBindings();
-        Status = "Label saved.";
+        Status = "Account details saved.";
     });
     public Task DeleteAsync(AccountProfileViewModel account) => ExecuteAsync("Removing local profile…", async token =>
     {
@@ -370,6 +372,7 @@ public sealed class PanelController : INotifyPropertyChanged
             var vm = new AccountProfileViewModel(new AccountProfile
             {
                 DisplayName = names[i], ColorHex = colors[i],
+                PurchaseUrl = i is 0 or 2 ? $"https://seller.example/orders/demo-{i + 1}" : null,
                 Usage = new UsageSnapshot
                 {
                     Status = "available", PlanType = "plus", CheckedAt = DateTimeOffset.UtcNow.AddMinutes(-1),

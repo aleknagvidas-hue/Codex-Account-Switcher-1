@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using CodexAccountSwitcher.Models;
+using CodexAccountSwitcher.Services;
 
 namespace CodexAccountSwitcher.ViewModels;
 
@@ -22,6 +23,11 @@ public sealed class AccountProfileViewModel : INotifyPropertyChanged
     public string PlanText => string.IsNullOrWhiteSpace(Profile.Usage?.PlanType)
         ? "Codex account"
         : $"Codex • {Profile.Usage.PlanType!.ToUpperInvariant()}";
+    public bool HasPurchaseLink => PurchaseLinkService.IsValid(Profile.PurchaseUrl);
+    public string PurchaseLinkText => HasPurchaseLink
+        ? PurchaseLinkService.DisplayHost(Profile.PurchaseUrl)
+        : "Seller link";
+    public string PurchaseLinkToolTip => Profile.PurchaseUrl ?? string.Empty;
 
     public DateTimeOffset MembershipEndsAt => Profile.CreatedAt.AddMonths(1);
     public string AddedAtText => Profile.CreatedAt.ToLocalTime()
@@ -246,6 +252,9 @@ public sealed class AccountProfileViewModel : INotifyPropertyChanged
         Notify(nameof(ColorHex));
         Notify(nameof(Initial));
         Notify(nameof(PlanText));
+        Notify(nameof(HasPurchaseLink));
+        Notify(nameof(PurchaseLinkText));
+        Notify(nameof(PurchaseLinkToolTip));
         Notify(nameof(MembershipEndsAt));
         Notify(nameof(AddedAtText));
         Notify(nameof(MembershipEndsText));

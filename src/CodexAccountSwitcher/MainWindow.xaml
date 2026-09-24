@@ -149,6 +149,12 @@
                                         <Button Width="88" Content="{Binding SwitchLabel}" IsEnabled="{Binding CanSwitch}" Style="{StaticResource PrimaryButton}" Tag="{Binding}" Click="Switch_Click" />
                                         <Button Width="88" Margin="0,6,0,0" Content="Reconnect" Padding="4" ToolTip="Renew this saved login, then switch to it"
                                                 Style="{StaticResource SecondaryButton}" Tag="{Binding}" Click="Reconnect_Click" />
+                                        <Button Width="88" Margin="0,6,0,0" Padding="4"
+                                                ToolTip="{Binding PurchaseLinkToolTip}" Style="{StaticResource SecondaryButton}"
+                                                Tag="{Binding}" Click="PurchaseLink_Click"
+                                                Visibility="{Binding HasPurchaseLink, Converter={StaticResource BoolToVisibility}}">
+                                            <TextBlock MaxWidth="76" FontSize="10" Text="{Binding PurchaseLinkText}" TextTrimming="CharacterEllipsis" />
+                                        </Button>
                                         <StackPanel Margin="0,7,0,0" Orientation="Horizontal" HorizontalAlignment="Center">
                                             <Button Width="40" Padding="3" Content="Edit" ToolTip="Rename" Style="{StaticResource SecondaryButton}" Tag="{Binding}" Click="Rename_Click" />
                                             <Button Width="46" Margin="4,0,0,0" Padding="3" Content="Remove" ToolTip="Remove local profile"

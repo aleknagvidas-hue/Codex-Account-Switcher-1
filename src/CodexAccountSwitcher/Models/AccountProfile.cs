@@ -7,6 +7,7 @@ public sealed class AccountProfile
     public string ColorHex { get; set; } = "#7C8CFF";
     public string Fingerprint { get; set; } = string.Empty;
     public string? BrowserProfileKey { get; set; }
+    public string? PurchaseUrl { get; set; }
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
     public DateTimeOffset? LastUsedAt { get; set; }
     public UsageSnapshot? Usage { get; set; }
